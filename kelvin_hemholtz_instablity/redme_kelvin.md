@@ -15,9 +15,9 @@ The goal of the project was to reproduce and extend earlier numerical results av
 In particular, the project investigates:
 
 - spatial evolution of the vortex sheet,
-- influence of the regularization parameter $\delta$ on the development of vortex structures,
+- influence of the regularization parameter `delta` on the development of vortex structures,
 - Fourier spectrum of the induced velocity,
-- flow through the surface $y=0$,
+- flow through the surface `y=0`,
 - comparison of results for different initial perturbations,
 - influence of numerical precision on stability and quality of the results.
 
@@ -38,7 +38,7 @@ The following assumptions are used in the model:
 - conservation of circulation,
 - periodic boundary conditions,
 - sinusoidal or random initial perturbation,
-- regularization of small scales by the parameter $\delta$.
+- regularization of small scales by the parameter `delta`.
 
 In an inviscid model, the vortex sheet may develop very small-scale structures. Since resolving arbitrarily small scales is impossible numerically, regularization is introduced to make the problem computationally tractable.
 
@@ -59,51 +59,39 @@ struct wir {
 
 where:
 
-- $x$, $y$ denote the position of a vortex point,
-- $\epsilon$ is the coordinate parametrizing the vortex sheet,
-- $\gamma$ is the circulation density.
+- `x`, `y` denote the position of a vortex point,
+- `epsilon` is the coordinate parametrizing the vortex sheet,
+- `gamma` is the circulation density.
 
 The total circulation is computed from the velocity jump across the sheet:
 
-$$
+```math
 G = u_1 L - u_2 L = (u_1-u_2)L
-$$
+```
 
 where:
 
-- $L$ is the initial length of the sheet,
-- $u_1$ is the velocity on one side of the sheet,
-- $u_2$ is the velocity on the other side of the sheet.
+- `L` is the initial length of the sheet,
+- `u1` is the velocity on one side of the sheet,
+- `u2` is the velocity on the other side of the sheet.
 
 The circulation density is then assigned along the parametrized sheet. After discretization, each vortex point is advected by the velocity field induced by all other points.
 
 After discretization, the problem becomes an N-body type problem, because every vortex point interacts with all other vortex points. For a direct summation method, this gives computational complexity of approximately:
 
-$$
+```math
 \mathcal{O}(N^2)
-$$
+```
 
-where $N$ is the number of vortex points.
+where `N` is the number of vortex points.
 
 ---
 
 ## Dynamical Equations
 
-For a vortex point located at:
+For a vortex point located at `(x_i, y_i)`, the regularized periodic velocity induced by another vortex point `(x_j, y_j)` is computed using the denominator:
 
-$$
-(x_i, y_i)
-$$
-
-the regularized periodic velocity induced by another vortex point:
-
-$$
-(x_j, y_j)
-$$
-
-is computed using the denominator:
-
-$$
+```math
 D_{ij}
 =
 \cosh\left(2\pi(y_i-y_j)\right)
@@ -111,11 +99,11 @@ D_{ij}
 \cos\left(2\pi(x_i-x_j)\right)
 +
 \delta^2
-$$
+```
 
 The induced horizontal velocity contribution is:
 
-$$
+```math
 u_{x,ij}
 =
 -\frac{1}{2}
@@ -125,11 +113,11 @@ u_{x,ij}
 }{
 D_{ij}
 }
-$$
+```
 
 The induced vertical velocity contribution is:
 
-$$
+```math
 u_{y,ij}
 =
 \frac{1}{2}
@@ -139,31 +127,31 @@ u_{y,ij}
 }{
 D_{ij}
 }
-$$
+```
 
-The full velocity of point $i$ is obtained by summing contributions from the discretized vortex sheet:
+The full velocity of point `i` is obtained by summing contributions from the discretized vortex sheet:
 
-$$
+```math
 \frac{dx_i}{dt}
 \approx
 \sum_{j=1}^{N-1}
 u_{x,ij}\Delta \epsilon_j
-$$
+```
 
-$$
+```math
 \frac{dy_i}{dt}
 \approx
 \sum_{j=1}^{N-1}
 u_{y,ij}\Delta \epsilon_j
-$$
+```
 
 where:
 
-$$
+```math
 \Delta \epsilon_j = \epsilon_j - \epsilon_{j-1}
-$$
+```
 
-The regularization parameter $\delta$ prevents singular behavior when vortex points become very close to each other. Physically, it can be interpreted as assigning a small but finite thickness to the vortex sheet.
+The regularization parameter `delta` prevents singular behavior when vortex points become very close to each other. Physically, it can be interpreted as assigning a small but finite thickness to the vortex sheet.
 
 ---
 
@@ -173,31 +161,31 @@ The vortex point positions are advanced in time using the classical fourth-order
 
 For the system:
 
-$$
+```math
 \frac{dX}{dt} = f(X)
-$$
+```
 
-where $X$ is the vector of all vortex point positions, one time step is computed as:
+where `X` is the vector of all vortex point positions, one time step is computed as:
 
-$$
+```math
 k_1 = f(X_n)
-$$
+```
 
-$$
-k_2 = f\left(X_n + \frac{1}{2}\Delta t k_1\right)
-$$
+```math
+k_2 = f\left(X_n + \frac{1}{2}\Delta t\, k_1\right)
+```
 
-$$
-k_3 = f\left(X_n + \frac{1}{2}\Delta t k_2\right)
-$$
+```math
+k_3 = f\left(X_n + \frac{1}{2}\Delta t\, k_2\right)
+```
 
-$$
-k_4 = f\left(X_n + \Delta t k_3\right)
-$$
+```math
+k_4 = f\left(X_n + \Delta t\, k_3\right)
+```
 
 The final update is:
 
-$$
+```math
 X_{n+1}
 =
 X_n
@@ -206,23 +194,23 @@ X_n
 \left(
 k_1 + 2k_2 + 2k_3 + k_4
 \right)
-$$
+```
 
 The time step is selected based on the initial discretization length and the total circulation:
 
-$$
+```math
 \Delta t
 =
 0.250
 \frac{L \Delta l}{|G|}
-$$
+```
 
 where:
 
-- $\Delta t$ is the time step,
-- $L$ is the initial sheet length,
-- $\Delta l$ is the target spacing between vortex points,
-- $G$ is the total circulation.
+- `Delta t` is the time step,
+- `L` is the initial sheet length,
+- `Delta l` is the target spacing between vortex points,
+- `G` is the total circulation.
 
 ---
 
@@ -230,15 +218,15 @@ where:
 
 In an ideal inviscid vortex sheet model, the instability may develop at arbitrarily small scales. Numerically, this creates difficulties because smaller and smaller structures would require increasingly dense discretization and higher accuracy.
 
-Therefore, the model uses the regularization parameter $\delta$.
+Therefore, the model uses the regularization parameter `delta`.
 
-The parameter $\delta$ limits the influence of the smallest scales and can be interpreted as assigning a small but finite thickness to the vortex sheet. For larger $\delta$, the development of small structures is more strongly damped. For smaller $\delta$, the sheet can form sharper and more complex vortex structures.
+The parameter `delta` limits the influence of the smallest scales and can be interpreted as assigning a small but finite thickness to the vortex sheet. For larger `delta`, the development of small structures is more strongly damped. For smaller `delta`, the sheet can form sharper and more complex vortex structures.
 
 In practice:
 
-- large $\delta$ produces smoother vortex structures,
-- small $\delta$ allows finer and more turbulent-looking structures,
-- too small $\delta$ requires finer discretization and better numerical precision.
+- large `delta` produces smoother vortex structures,
+- small `delta` allows finer and more turbulent-looking structures,
+- too small `delta` requires finer discretization and better numerical precision.
 
 ---
 
@@ -248,29 +236,29 @@ During the simulation, the vortex sheet stretches. As a result, the distances be
 
 The new point receives averaged values:
 
-$$
+```math
 x_{\mathrm{new}}
 =
 \frac{x_i+x_{i-1}}{2}
-$$
+```
 
-$$
+```math
 y_{\mathrm{new}}
 =
 \frac{y_i+y_{i-1}}{2}
-$$
+```
 
-$$
+```math
 \epsilon_{\mathrm{new}}
 =
 \frac{\epsilon_i+\epsilon_{i-1}}{2}
-$$
+```
 
-$$
+```math
 \gamma_{\mathrm{new}}
 =
 \frac{\gamma_i+\gamma_{i-1}}{2}
-$$
+```
 
 This allows the vortex sheet to maintain a more accurate representation in regions where it becomes strongly deformed.
 
@@ -371,7 +359,7 @@ Default parameters:
 L = 1.0
 u1 = 2.0
 u2 = 1.0
-time = 5.0
+time = 300.0
 delta = 0.1
 ```
 
@@ -403,7 +391,7 @@ Format:
 x_0 x_1 x_2 ... x_N y_0 y_1 y_2 ... y_N
 ```
 
-First all $x$ coordinates are written, followed by all $y$ coordinates.
+First all `x` coordinates are written, followed by all `y` coordinates.
 
 Example:
 
@@ -415,7 +403,7 @@ results/wyniki_0.1_20.txt
 
 ### `predkosc_*.txt` Files
 
-These files store samples of the velocity field along the axis $y=0$.
+These files store samples of the velocity field along the axis `y=0`.
 
 Format:
 
@@ -423,7 +411,7 @@ Format:
 vx_0 vx_1 vx_2 ... vx_N vy_0 vy_1 vy_2 ... vy_N
 ```
 
-They are used to perform Fourier analysis and to compute the flow through $y=0$.
+They are used to perform Fourier analysis and to compute the flow through `y=0`.
 
 ### `diagnostyka_*.txt` Files
 
@@ -452,7 +440,7 @@ python3 scripts/analyze_vortex_results.py
 The script automatically:
 
 - searches for simulation output in `results/`,
-- detects available values of $\delta$,
+- detects available values of `delta`,
 - detects the available time range,
 - selects several representative time instants for static plots,
 - selects the last common available time for comparison plots,
@@ -484,45 +472,45 @@ python3 scripts/analyze_vortex_results.py \
 
 If `--times` is not provided, the script chooses representative frames automatically.
 
-If `--compare-time` is not provided, the script uses the last common available time among the selected $\delta$ values.
+If `--compare-time` is not provided, the script uses the last common available time among the selected `delta` values.
 
 The script generates:
 
 - plots of the vortex sheet at several time instants,
 - Fourier spectra at several time instants,
-- a plot of the flow through $y=0$,
+- a plot of the flow through `y=0`,
 - a GIF animation of the vortex sheet and its spectrum,
-- comparisons between different values of $\delta$, if more than one $\delta$ is available.
+- comparisons between different values of `delta`, if more than one `delta` is available.
 
 ---
 
 ## Quantities Computed in the Analysis
 
-Apart from the spatial evolution of the vortex sheet, the post-processing script computes two additional quantities: the Fourier spectrum of the sampled velocity field and the flow through the initial separation line $y=0$.
+Apart from the spatial evolution of the vortex sheet, the post-processing script computes two additional quantities: the Fourier spectrum of the sampled velocity field and the flow through the initial separation line `y=0`.
 
 ### Fourier Spectrum
 
 The velocity field is sampled along the line:
 
-$$
+```math
 y = 0
-$$
+```
 
 For a set of sampled velocity values:
 
-$$
+```math
 u_x(x_m,0,t)
-$$
+```
 
-$$
+```math
 u_y(x_m,0,t)
-$$
+```
 
 the discrete Fourier transform is computed.
 
-The spectral energy of mode $k$ is estimated as:
+The spectral energy of mode `k` is estimated as:
 
-$$
+```math
 E_k
 =
 \frac{
@@ -532,24 +520,24 @@ E_k
 }{
 N_s^2
 }
-$$
+```
 
 where:
 
-- $k$ is the Fourier mode number,
-- $N_s$ is the number of sampled points,
+- `k` is the Fourier mode number,
+- `N_s` is the number of sampled points,
 - low modes correspond to large spatial structures,
 - high modes correspond to small spatial structures.
 
 This makes it possible to track how energy moves between large and small spatial scales during the roll-up of the vortex sheet.
 
-### Flow Through $y=0$
+### Flow Through `y=0`
 
-The flow through the initial separation line is estimated using the vertical velocity component sampled along $y=0$.
+The flow through the initial separation line is estimated using the vertical velocity component sampled along `y=0`.
 
 The main quantity used in the analysis is:
 
-$$
+```math
 Q_{\mathrm{abs}}(t)
 =
 \int_0^L
@@ -557,21 +545,21 @@ Q_{\mathrm{abs}}(t)
 u_y(x,0,t)
 \right|
 \,dx
-$$
+```
 
 This measures the intensity of the exchange of fluid across the original interface.
 
 The signed flow is also computed:
 
-$$
+```math
 Q_{\mathrm{signed}}(t)
 =
 \int_0^L
 u_y(x,0,t)
 \,dx
-$$
+```
 
-However, in a periodic domain, the signed quantity may partially cancel out. For this reason, $Q_{\mathrm{abs}}(t)$ is usually more useful as a measure of mixing intensity.
+However, in a periodic domain, the signed quantity may partially cancel out. For this reason, `Q_abs(t)` is usually more useful as a measure of mixing intensity.
 
 ---
 
@@ -579,7 +567,7 @@ However, in a periodic domain, the signed quantity may partially cancel out. For
 
 After running the analysis script, selected plots and animations are saved in the `figures/` directory.
 
-The exact filenames depend on the available values of $\delta$ and on the time reached by the simulation. For example, for $\delta=0.1$, the script may generate:
+The exact filenames depend on the available values of `delta` and on the time reached by the simulation. For example, for `delta=0.1`, the script may generate:
 
 ```text
 figures/plots/sheet_snapshots_delta_0.1.png
@@ -627,7 +615,7 @@ If a comparison image uses another time value, the filename in the markdown shou
 
 ## Comparison of the Regularization Effect
 
-For multiple values of $\delta$, the analysis can be run as:
+For multiple values of `delta`, the analysis can be run as:
 
 ```bash
 python3 scripts/analyze_vortex_results.py \
@@ -652,27 +640,27 @@ The exact filename should always match the file generated by the script.
 
 ### Vortex Sheet
 
-The vortex sheet plot shows the spatial evolution of vortex points. For smaller values of $\delta$, smaller and sharper structures may appear. For larger values of $\delta$, the development of small scales is more strongly damped.
+The vortex sheet plot shows the spatial evolution of vortex points. For smaller values of `delta`, smaller and sharper structures may appear. For larger values of `delta`, the development of small scales is more strongly damped.
 
-In practice, the parameter $\delta$ controls how fine the structures in the solution can become. A larger regularization value smooths the vortex sheet and delays the formation of smaller structures. A smaller regularization value allows small scales to develop faster, which makes the solution more complex and locally turbulent.
+In practice, the parameter `delta` controls how fine the structures in the solution can become. A larger regularization value smooths the vortex sheet and delays the formation of smaller structures. A smaller regularization value allows small scales to develop faster, which makes the solution more complex and locally turbulent.
 
 ### Fourier Spectrum
 
 The Fourier spectrum shows which spatial scales are present in the solution. Low modes correspond to large spatial structures, while high modes correspond to small scales.
 
-For larger values of $\delta$, the maximum of the spectrum usually corresponds to the characteristic scale of the main vortices visible at a given time. This means that the solution is dominated by one larger structure or by several structures of similar scale.
+For larger values of `delta`, the maximum of the spectrum usually corresponds to the characteristic scale of the main vortices visible at a given time. This means that the solution is dominated by one larger structure or by several structures of similar scale.
 
-For small values of $\delta$, the solution has a more complex character. In the initial phase, energy may appear in higher modes, which corresponds to the development of smaller structures. Later, as the vortex sheet rolls up, smaller vortices begin to merge and wrap around larger vortex centers. In such a case, the maximum of the spectrum may shift from modes corresponding to small perturbations toward modes associated with larger structures formed by the grouping and rolling-up of smaller vortices.
+For small values of `delta`, the solution has a more complex character. In the initial phase, energy may appear in higher modes, which corresponds to the development of smaller structures. Later, as the vortex sheet rolls up, smaller vortices begin to merge and wrap around larger vortex centers. In such a case, the maximum of the spectrum may shift from modes corresponding to small perturbations toward modes associated with larger structures formed by the grouping and rolling-up of smaller vortices.
 
 For solutions with a more turbulent character, the spectrum no longer describes only one dominant scale. Instead, it shows the simultaneous presence of many scales: large vortices organizing the motion and smaller structures forming inside them.
 
-### Flow Through $y=0$
+### Flow Through `y=0`
 
-The flow through $y=0$ is computed from the vertical velocity component $u_y$ sampled along the axis $y=0$.
+The flow through `y=0` is computed from the vertical velocity component `u_y` sampled along the axis `y=0`.
 
 The main quantity used in the script is:
 
-$$
+```math
 Q_{\mathrm{abs}}(t)
 =
 \int_0^L
@@ -680,19 +668,19 @@ Q_{\mathrm{abs}}(t)
 u_y(x,0,t)
 \right|
 \,dx
-$$
+```
 
 It measures the intensity of motion across the original separation surface. Larger values mean stronger exchange between the two initially separated layers.
 
 The signed quantity:
 
-$$
+```math
 Q_{\mathrm{signed}}(t)
 =
 \int_0^L
 u_y(x,0,t)
 \,dx
-$$
+```
 
 is also plotted, but in a periodic system it may partially cancel out. Therefore, the absolute flow is usually a clearer indicator of mixing intensity.
 
@@ -721,14 +709,14 @@ Such an image can be prepared manually by combining a screenshot of the earlier 
 Typical results are consistent with the expected behavior of the Kelvin-Helmholtz instability:
 
 - the vortex sheet begins to roll up and form vortex structures,
-- the parameter $\delta$ controls the rate and scale of vortex development,
-- smaller $\delta$ allows finer structures to develop,
-- larger $\delta$ has a smoothing effect,
+- the parameter `delta` controls the rate and scale of vortex development,
+- smaller `delta` allows finer structures to develop,
+- larger `delta` has a smoothing effect,
 - the Fourier spectrum reflects the presence of both small and large scales,
-- for large values of $\delta$, the spectrum is usually related to the characteristic scale of the main vortices,
-- for small values of $\delta$, the spectral energy may cover many modes because the solution contains both larger structures and smaller perturbations,
+- for large values of `delta`, the spectrum is usually related to the characteristic scale of the main vortices,
+- for small values of `delta`, the spectral energy may cover many modes because the solution contains both larger structures and smaller perturbations,
 - over time, smaller structures may wrap around larger vortex centers, which influences the shift of the spectral maximum,
-- the flow through $y=0$ describes the intensity of mixing between the layers,
+- the flow through `y=0` describes the intensity of mixing between the layers,
 - the initial perturbation affects the character of later structures,
 - using `double` precision improves numerical stability compared with lower-precision computations, especially for longer simulations and smaller regularization values.
 
