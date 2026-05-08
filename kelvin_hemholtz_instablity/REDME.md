@@ -8,9 +8,11 @@ In this project, the vortex sheet is represented by discrete vortex points. Each
 
 ---
 
-## Project Goal
+## **Project Goal and Main Contribution**
 
-The goal of the project was to reproduce and extend earlier numerical results available in the literature on the Kelvin-Helmholtz instability, using modern computers, parallel computation, and increased numerical precision.
+The goal of the project was to reproduce and extend earlier numerical results available in the literature on the Kelvin-Helmholtz instability using modern computers, parallel computation, and increased numerical precision.
+
+**The main contribution of this project is an extended numerical study of periodic vortex sheet roll-up with higher numerical precision, finer regularization scales, and additional diagnostics compared with the basic reference simulations.**
 
 In particular, the project investigates:
 
@@ -21,11 +23,20 @@ In particular, the project investigates:
 - comparison of results for different initial perturbations,
 - influence of numerical precision on stability and quality of the results.
 
-The main difference compared with earlier results was the use of `double` precision instead of `float`, together with parallel computation. This made it possible to extend the simulation time, reduce the discretization scale( from 0.25 to even 0.01, making the beheviour therefoure much more turbulent and realistic in low scales) , and study the development of vortex structures more accurately in comparison with earlier numerical works.
+**Compared with earlier numerical results, the main extension is the use of `double` precision instead of lower-precision arithmetic, together with MPI-based parallel computation.** This made it possible to increase the simulation time, reduce the regularization scale, and study the development of small-scale vortex structures more accurately.
 
-Additionally, compared with the basic approach, the project studies not only the time evolution of the vortex sheet, but also its Fourier spectrum and the flow through the initial separation surface.
+In the reference-style simulations, larger values of the regularization parameter were typically sufficient to reproduce the main roll-up process. In this project, the regularization scale was reduced from values such as `delta = 0.25` down to values as small as `delta = 0.01`. This allowed the simulation to resolve sharper and more complex small-scale structures, making the behavior more turbulent and more detailed at low spatial scales.
 
----
+**The physical contribution of the project is therefore not only the reproduction of vortex sheet roll-up, but also the analysis of how decreasing the regularization parameter changes the structure of the flow, the Fourier spectrum, and the intensity of mixing through the initial interface.**
+
+Additionally, compared with the basic approach, the project studies not only the time evolution of the vortex sheet geometry, but also:
+
+- the Fourier spectrum of the induced velocity field,
+- the flow through the initial separation surface `y=0`,
+- the relation between regularization scale and the emergence of small-scale vortex structures,
+- the influence of numerical precision on long-time stability of the simulation.
+
+**In summary, the project extends earlier vortex sheet simulations by combining finer regularization scales, double-precision arithmetic, MPI parallelization, and spectral/flow diagnostics in order to study the Kelvin-Helmholtz roll-up process in more detail.**
 
 ## Physical Background
 
