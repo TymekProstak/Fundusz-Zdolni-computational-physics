@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
@@ -376,13 +377,41 @@ std::string delta_do_nazwy(double delta) {
 }
 
 
+std::string normalizuj_tryb_zaburzenia(std::string mode) {
+    std::transform(
+        mode.begin(),
+        mode.end(),
+        mode.begin(),
+        [](unsigned char c) {
+            return static_cast<char>(std::tolower(c));
+        }
+    );
+
+    if (mode == "sin" || mode == "sine" || mode == "sinus") {
+        return "sin";
+    }
+
+    if (mode == "noise" || mode == "random" || mode == "uniform") {
+        return "noise";
+    }
+
+    return "";
+}
+
+
+bool poprawny_tryb_zaburzenia(const std::string& mode) {
+    return mode == "sin" || mode == "noise";
+}
+
+
 void zapisz_wiry(
     const std::vector<wir>& tablica_wirow,
     double delta,
-    int krok
+    int krok,
+    const std::string& output_dir
 ) {
     std::ostringstream filename_stream;
-    filename_stream << "results/wyniki_" << delta_do_nazwy(delta) << "_" << krok << ".txt";
+    filename_stream << output_dir << "/wyniki_" << delta_do_nazwy(delta) << "_" << krok << ".txt";
 
     std::ofstream plik(filename_stream.str());
 
@@ -407,10 +436,11 @@ void zapisz_predkosci(
     double L,
     double delta,
     int krok,
-    int N0
+    int N0,
+    const std::string& output_dir
 ) {
     std::ostringstream filename_stream;
-    filename_stream << "results/predkosc_" << delta_do_nazwy(delta) << "_" << krok << ".txt";
+    filename_stream << output_dir << "/predkosc_" << delta_do_nazwy(delta) << "_" << krok << ".txt";
 
     std::ofstream plik(filename_stream.str());
 
@@ -443,10 +473,11 @@ void zapisz_predkosci(
 void zapisz_diagnostyke(
     const std::vector<wir>& tablica_wirow,
     double delta,
-    int krok
+    int krok,
+    const std::string& output_dir
 ) {
     std::ostringstream filename_stream;
-    filename_stream << "results/diagnostyka_" << delta_do_nazwy(delta) << ".txt";
+    filename_stream << output_dir << "/diagnostyka_" << delta_do_nazwy(delta) << ".txt";
 
     bool dopisz_naglowek = !std::filesystem::exists(filename_stream.str());
 
@@ -468,7 +499,8 @@ void warunek_poczatkowy(
     std::vector<wir>& tablica_wirow,
     double L,
     double gestoscCyrkulacji,
-    double l_docelowe
+    double l_docelowe,
+    const std::string& perturbation_mode
 ) {
     int N = len(tablica_wirow);
 
@@ -481,7 +513,14 @@ void warunek_poczatkowy(
         tablica_wirow[i].epsilon = static_cast<double>(i) / static_cast<double>(N - 1);
 
         tablica_wirow[i].x = i * L / static_cast<double>(N - 1);
-        tablica_wirow[i].y = dis(gen) * amplituda;
+        tablica_wirow[i].y = 0.0;
+
+        if (perturbation_mode == "sin") {
+            tablica_wirow[i].y =
+                amplituda * std::sin(2.0 * pi * tablica_wirow[i].epsilon);
+        } else {
+            tablica_wirow[i].y = dis(gen) * amplituda;
+        }
 
         if (i == 0 || i == N - 1) {
             tablica_wirow[i].y = 0.0;
@@ -497,7 +536,9 @@ void glowna_petla(
     double u1,
     double u2,
     double czas_symulacji,
-    double delta
+    double delta,
+    const std::string& perturbation_mode,
+    const std::string& output_dir
 ) {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -540,7 +581,7 @@ void glowna_petla(
     int liczba_krokow = static_cast<int>(czas_symulacji / delta_t);
 
     if (rank == 0) {
-        std::filesystem::create_directories("results");
+        std::filesystem::create_directories(output_dir);
 
         std::cout << "liczba procesow MPI: " << size << "\n";
         std::cout << "liczba krokow: " << liczba_krokow << "\n";
@@ -551,7 +592,9 @@ void glowna_petla(
                   << "g = " << gestoscCyrkulacji << "\n"
                   << "dt = " << delta_t << "\n"
                   << "dl = " << l_docelowe << "\n"
-                  << "L = " << L << "\n";
+                  << "L = " << L << "\n"
+                  << "perturbation = " << perturbation_mode << "\n"
+                  << "output_dir = " << output_dir << "\n";
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -559,7 +602,13 @@ void glowna_petla(
     std::vector<wir> tablica_wirow(N);
 
     if (rank == 0) {
-        warunek_poczatkowy(tablica_wirow, L, gestoscCyrkulacji, l_docelowe);
+        warunek_poczatkowy(
+            tablica_wirow,
+            L,
+            gestoscCyrkulacji,
+            l_docelowe,
+            perturbation_mode
+        );
     }
 
     MPI_Bcast(
@@ -589,9 +638,9 @@ void glowna_petla(
         tablica_wirow = runge_kutta(tablica_wirow, delta, delta_t, commTime, compTime);
 
         if (rank == 0 && krok % 10 == 0) {
-            zapisz_wiry(tablica_wirow, delta, krok);
-            zapisz_predkosci(tablica_wirow, L, delta, krok, N0);
-            zapisz_diagnostyke(tablica_wirow, delta, krok);
+            zapisz_wiry(tablica_wirow, delta, krok, output_dir);
+            zapisz_predkosci(tablica_wirow, L, delta, krok, N0, output_dir);
+            zapisz_diagnostyke(tablica_wirow, delta, krok, output_dir);
         }
     }
 }
@@ -607,26 +656,76 @@ int main(int argc, char** argv) {
     double u1 = 2.0;
     double u2 = 1.0;
     double czas_symulacji = 10.0;
-    double delta = 0.5;
+    double delta = 0.25;
 
-    if (argc == 6) {
+    std::string perturbation_mode = "noise";
+    std::string output_dir = "results";
+
+    if (argc == 2) {
+        perturbation_mode = normalizuj_tryb_zaburzenia(argv[1]);
+    } else if (argc == 3) {
+        perturbation_mode = normalizuj_tryb_zaburzenia(argv[1]);
+        output_dir = argv[2];
+    } else if (argc == 6) {
         L = std::atof(argv[1]);
         u1 = std::atof(argv[2]);
         u2 = std::atof(argv[3]);
         czas_symulacji = std::atof(argv[4]);
         delta = std::atof(argv[5]);
+    } else if (argc == 7) {
+        L = std::atof(argv[1]);
+        u1 = std::atof(argv[2]);
+        u2 = std::atof(argv[3]);
+        czas_symulacji = std::atof(argv[4]);
+        delta = std::atof(argv[5]);
+        perturbation_mode = normalizuj_tryb_zaburzenia(argv[6]);
+    } else if (argc == 8) {
+        L = std::atof(argv[1]);
+        u1 = std::atof(argv[2]);
+        u2 = std::atof(argv[3]);
+        czas_symulacji = std::atof(argv[4]);
+        delta = std::atof(argv[5]);
+        perturbation_mode = normalizuj_tryb_zaburzenia(argv[6]);
+        output_dir = argv[7];
     } else if (argc != 1) {
         if (rank == 0) {
             std::cerr << "Uzycie:\n";
             std::cerr << "  mpirun -np 4 ./vortex_sheet\n";
+            std::cerr << "  mpirun -np 4 ./vortex_sheet noise\n";
+            std::cerr << "  mpirun -np 4 ./vortex_sheet sin\n";
+            std::cerr << "  mpirun -np 4 ./vortex_sheet perturbation output_dir\n";
             std::cerr << "  mpirun -np 4 ./vortex_sheet L u1 u2 czas delta\n";
+            std::cerr << "  mpirun -np 4 ./vortex_sheet L u1 u2 czas delta perturbation\n";
+            std::cerr << "  mpirun -np 4 ./vortex_sheet L u1 u2 czas delta perturbation output_dir\n";
+            std::cerr << "\n";
+            std::cerr << "perturbation:\n";
+            std::cerr << "  noise, random, uniform\n";
+            std::cerr << "  sin, sine, sinus\n";
         }
 
         MPI_Finalize();
         return 1;
     }
 
-    glowna_petla(L, u1, u2, czas_symulacji, delta);
+    if (!poprawny_tryb_zaburzenia(perturbation_mode)) {
+        if (rank == 0) {
+            std::cerr << "Nieznany typ zaburzenia.\n";
+            std::cerr << "Dostepne opcje: noise, random, uniform, sin, sine, sinus\n";
+        }
+
+        MPI_Finalize();
+        return 1;
+    }
+
+    glowna_petla(
+        L,
+        u1,
+        u2,
+        czas_symulacji,
+        delta,
+        perturbation_mode,
+        output_dir
+    );
 
     if (rank == 0) {
         std::cout << "done!\n";
