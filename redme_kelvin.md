@@ -1,20 +1,108 @@
 # MPI Vortex Sheet Simulation
 
-Symulacja numeryczna ewolucji powierzchni wirowej z wykorzystaniem metody wirów dyskretnych oraz równoległości MPI.
+Symulacja numeryczna niestabilności Kelvina-Helmholtza z wykorzystaniem metody powierzchni wirowej, całkowania Rungego-Kutty czwartego rzędu oraz obliczeń równoległych MPI.
 
-Projekt dotyczy numerycznego badania rozwoju niestabilności powierzchni wirowej, w szczególności zjawiska podobnego do niestabilności Kelvina-Helmholtza. Powierzchnia wirowa jest reprezentowana jako zbiór punktów wirowych, które poruszają się zgodnie z prędkością indukowaną przez pozostałe punkty.
+Projekt dotyczy numerycznego badania niestabilności rozwijającej się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. W takim układzie ścinanie na granicy warstw prowadzi do rozwoju zaburzeń, zwijania powierzchni wirowej oraz powstawania struktur wirowych.
 
-Do całkowania w czasie używany jest klasyczny schemat Rungego-Kutty czwartego rzędu. Obliczenia prędkości zostały zrównoleglone z użyciem MPI.
+W projekcie powierzchnia wirowa jest reprezentowana przez dyskretne punkty wirowe. Każdy punkt porusza się z prędkością indukowaną przez wszystkie pozostałe punkty. Po dyskretyzacji problem ma charakter problemu typu N-ciał, ponieważ każdy element oddziałuje z każdym innym elementem.
 
-## Najważniejsze elementy projektu
+## Cel projektu
 
-- dyskretyzacja powierzchni wirowej,
-- regularizowane jądro prędkości,
-- całkowanie w czasie metodą RK4,
-- równoległe obliczanie prędkości z użyciem MPI,
-- automatyczna redyskretyzacja powierzchni wirowej,
-- zapis wyników do plików tekstowych,
-- zapis podstawowych wielkości diagnostycznych.
+Celem projektu było odtworzenie i rozwinięcie wcześniejszych obliczeń numerycznych dotyczących niestabilności Kelvina-Helmholtza z wykorzystaniem współczesnych komputerów, obliczeń równoległych oraz większej precyzji numerycznej.
+
+W szczególności badane były:
+
+- przestrzenna ewolucja powierzchni wirowej,
+- wpływ parametru regularyzacji `delta` na rozwój struktur wirowych,
+- rozkład Fouriera indukowanej prędkości,
+- przepływ przez powierzchnię `y=0`,
+- porównanie wyników dla różnych zaburzeń początkowych,
+- porównanie nowych wyników z wcześniejszymi wynikami referencyjnymi.
+
+Dodatkowym celem było sprawdzenie, jak wyniki zmieniają się po przejściu z obliczeń o mniejszej precyzji na obliczenia w typie `double`. Dzięki temu można było uzyskać stabilniejsze wyniki numeryczne, szczególnie dla mniejszych wartości regularyzacji oraz dla dłuższych czasów symulacji.
+
+## Tło fizyczne
+
+Niestabilność Kelvina-Helmholtza pojawia się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. Małe zaburzenie granicy między warstwami może zostać wzmocnione przez pole prędkości indukowane przez samą powierzchnię wirową. W wyniku tego powierzchnia zaczyna się zwijać i tworzyć charakterystyczne struktury wirowe.
+
+W modelu przyjęto następujące założenia:
+
+- brak lepkości,
+- brak napięcia powierzchniowego,
+- zachowanie cyrkulacji,
+- periodyczne warunki brzegowe,
+- początkowe zaburzenie sinusoidalne albo losowe,
+- regularyzacja małych skal przez parametr `delta`.
+
+## Model numeryczny
+
+Powierzchnia wirowa jest reprezentowana przez punkty:
+
+```cpp
+struct wir {
+    double x;
+    double y;
+    double epsilon;
+    double gamma;
+};
+```
+
+gdzie:
+
+- `x`, `y` oznaczają położenie punktu wirowego,
+- `epsilon` jest współrzędną parametryzującą powierzchnię,
+- `gamma` jest gęstością cyrkulacji.
+
+Całkowita cyrkulacja jest liczona jako:
+
+```text
+G = u1 * L - u2 * L
+```
+
+gdzie:
+
+- `L` jest długością początkowej powierzchni,
+- `u1` jest prędkością po jednej stronie powierzchni,
+- `u2` jest prędkością po drugiej stronie powierzchni.
+
+Po zdyskretyzowaniu powierzchni, dla każdego punktu obliczana jest prędkość indukowana przez wszystkie pozostałe punkty. Następnie położenia punktów są aktualizowane metodą Rungego-Kutty czwartego rzędu.
+
+## Regularyzacja
+
+W idealnym, nielepkim modelu powierzchni wirowej niestabilność może rozwijać się w dowolnie małych skalach. Numerycznie prowadzi to do problemów, ponieważ coraz mniejsze struktury wymagałyby coraz gęstszej siatki i coraz większej dokładności.
+
+Dlatego w modelu używany jest parametr regularyzacji `delta`.
+
+Parametr `delta` ogranicza wpływ najmniejszych skal i można go interpretować jako nadanie powierzchni wirowej małej, ale skończonej grubości. Dla większego `delta` rozwój małych struktur jest silniej tłumiony. Dla mniejszego `delta` powierzchnia może tworzyć ostrzejsze i bardziej złożone struktury wirowe.
+
+## Redyskretyzacja
+
+W trakcie symulacji powierzchnia wirowa ulega rozciąganiu. Odległości między sąsiednimi punktami mogą więc rosnąć. Jeżeli odległość między dwoma sąsiednimi punktami przekroczy wartość krytyczną, dodawany jest nowy punkt pośredni.
+
+Nowy punkt otrzymuje uśrednione wartości:
+
+```text
+x       = (x_i + x_{i-1}) / 2
+y       = (y_i + y_{i-1}) / 2
+epsilon = (epsilon_i + epsilon_{i-1}) / 2
+gamma   = (gamma_i + gamma_{i-1}) / 2
+```
+
+Dzięki temu powierzchnia wirowa zachowuje dokładniejszą reprezentację w miejscach, gdzie zaczyna się mocniej deformować.
+
+## Obliczenia równoległe
+
+Obliczanie prędkości dla różnych punktów jest od siebie niezależne. Z tego powodu główna część obliczeń może być wykonywana równolegle.
+
+W projekcie wykorzystano bibliotekę MPI. Każdy proces oblicza prędkości dla własnego fragmentu tablicy punktów wirowych. Po zakończeniu lokalnych obliczeń procesy wymieniają dane, tak aby każdy proces znał pełny stan powierzchni przed kolejnym etapem metody RK4.
+
+Do synchronizacji używane jest:
+
+```cpp
+MPI_Allgatherv(...)
+```
+
+Taki schemat pozwala przyspieszyć najbardziej kosztowny etap programu, czyli obliczanie oddziaływań między punktami.
 
 ## Struktura repozytorium
 
@@ -22,15 +110,25 @@ Do całkowania w czasie używany jest klasyczny schemat Rungego-Kutty czwartego 
 .
 ├── main.cpp
 ├── README.md
-└── results/
-    ├── wyniki_*.txt
-    ├── predkosc_*.txt
-    └── diagnostyka_*.txt
+├── scripts/
+│   └── analyze_vortex_results.py
+├── results/
+│   ├── wyniki_*.txt
+│   ├── predkosc_*.txt
+│   └── diagnostyka_*.txt
+└── figures/
+    ├── plots/
+    ├── animations/
+    └── comparisons/
 ```
 
-Folder `results/` jest tworzony automatycznie podczas działania programu.
+Folder `results/` jest tworzony przez program C++.
+
+Folder `figures/` jest tworzony przez skrypt Pythona.
 
 ## Wymagania
+
+### C++ i MPI
 
 Do kompilacji wymagany jest kompilator C++ z obsługą standardu C++17 oraz biblioteka MPI.
 
@@ -41,13 +139,21 @@ sudo apt update
 sudo apt install build-essential openmpi-bin libopenmpi-dev
 ```
 
+### Python
+
+Do analizy i generowania wykresów wymagane są:
+
+```bash
+pip install numpy matplotlib pillow
+```
+
 ## Kompilacja
 
 ```bash
 mpic++ -O3 -std=c++17 main.cpp -o vortex_sheet
 ```
 
-## Uruchomienie
+## Uruchomienie symulacji
 
 Program można uruchomić z domyślnymi parametrami:
 
@@ -55,7 +161,7 @@ Program można uruchomić z domyślnymi parametrami:
 mpirun -np 4 ./vortex_sheet
 ```
 
-Domyślne parametry symulacji:
+Domyślne parametry:
 
 ```text
 L = 1.0
@@ -77,81 +183,15 @@ Przykład:
 mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 300.0 0.1
 ```
 
-## Znaczenie parametrów
-
-| Parametr | Znaczenie |
-|---|---|
-| `L` | długość początkowej powierzchni wirowej |
-| `u1` | prędkość po jednej stronie powierzchni |
-| `u2` | prędkość po drugiej stronie powierzchni |
-| `czas` | całkowity czas symulacji |
-| `delta` | parametr regularyzacji jądra prędkości |
-
-Całkowita cyrkulacja jest liczona jako:
-
-```text
-G = u1 * L - u2 * L
-```
-
-Gęstość cyrkulacji jest następnie przypisywana punktom wirowym wzdłuż początkowej powierzchni.
-
-## Model numeryczny
-
-Powierzchnia wirowa jest reprezentowana przez punkty:
-
-```cpp
-struct wir {
-    double x;
-    double y;
-    double epsilon;
-    double gamma;
-};
-```
-
-gdzie:
-
-- `x`, `y` oznaczają położenie punktu wirowego,
-- `epsilon` jest współrzędną parametryzującą powierzchnię,
-- `gamma` jest gęstością cyrkulacji.
-
-Dla każdego punktu obliczana jest prędkość indukowana przez całą powierzchnię wirową. Następnie położenia punktów są aktualizowane metodą Rungego-Kutty czwartego rzędu.
-
-## Redyskretyzacja
-
-W trakcie symulacji odległości między sąsiednimi punktami mogą rosnąć. Jeżeli odległość między dwoma sąsiednimi punktami przekroczy wartość krytyczną, dodawany jest nowy punkt pośredni.
-
-Nowy punkt otrzymuje uśrednione wartości:
-
-```text
-x       = (x_i + x_{i-1}) / 2
-y       = (y_i + y_{i-1}) / 2
-epsilon = (epsilon_i + epsilon_{i-1}) / 2
-gamma   = (gamma_i + gamma_{i-1}) / 2
-```
-
-Dzięki temu powierzchnia wirowa zachowuje dokładniejszą reprezentację w miejscach, gdzie zaczyna się mocniej deformować.
-
-## Równoległość MPI
-
-Każdy proces MPI oblicza prędkości tylko dla części punktów wirowych. Po zakończeniu lokalnych obliczeń dane są synchronizowane między wszystkimi procesami.
-
-Do synchronizacji używane jest:
-
-```cpp
-MPI_Allgatherv(...)
-```
-
-Każdy proces po synchronizacji posiada pełny stan powierzchni wirowej i może przejść do następnego etapu metody RK4.
-
 ## Pliki wynikowe
 
-Program zapisuje pliki do folderu `results/`.
+Program zapisuje wyniki do folderu `results/`.
 
 ### Pliki `wyniki_*.txt`
 
-Przechowują położenie powierzchni wirowej w kolejnych krokach czasowych.
+Pliki przechowują położenie powierzchni wirowej w kolejnych krokach czasowych.
 
-Format pliku:
+Format:
 
 ```text
 x_0 x_1 x_2 ... x_N y_0 y_1 y_2 ... y_N
@@ -159,7 +199,7 @@ x_0 x_1 x_2 ... x_N y_0 y_1 y_2 ... y_N
 
 Najpierw zapisywane są wszystkie współrzędne `x`, a następnie wszystkie współrzędne `y`.
 
-Przykładowe nazwy:
+Przykład:
 
 ```text
 results/wyniki_0.1_0.txt
@@ -169,79 +209,195 @@ results/wyniki_0.1_20.txt
 
 ### Pliki `predkosc_*.txt`
 
-Przechowują próbki pola prędkości na osi początkowej powierzchni wirowej.
+Pliki przechowują próbki pola prędkości na osi `y=0`.
 
-Format pliku:
+Format:
 
 ```text
 vx_0 vx_1 vx_2 ... vx_N vy_0 vy_1 vy_2 ... vy_N
 ```
 
-### Plik `diagnostyka_*.txt`
+Na ich podstawie wykonywana jest analiza Fouriera oraz obliczany jest przepływ przez `y=0`.
 
-Przechowuje podstawowe wielkości diagnostyczne:
+### Pliki `diagnostyka_*.txt`
+
+Pliki diagnostyczne zawierają podstawowe wielkości globalne:
 
 ```text
 krok liczba_wirow moment_x moment_y bezwladnosc
 ```
 
-## Przykładowy przebieg pracy
+## Analiza wyników
 
-Kompilacja:
-
-```bash
-mpic++ -O3 -std=c++17 main.cpp -o vortex_sheet
-```
-
-Uruchomienie na 4 procesach:
-
-```bash
-mpirun -np 4 ./vortex_sheet
-```
-
-Uruchomienie z własnymi parametrami:
-
-```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 300.0 0.1
-```
-
-Po zakończeniu symulacji wyniki znajdują się w folderze:
+Do analizy wyników służy skrypt:
 
 ```text
-results/
+scripts/analyze_vortex_results.py
 ```
 
-## Przykładowa wizualizacja wyników
+Uruchomienie podstawowe:
 
-Pliki `wyniki_*.txt` można łatwo zwizualizować w Pythonie. Minimalny przykład odczytu jednego pliku:
-
-```python
-import matplotlib.pyplot as plt
-
-filename = "results/wyniki_0.1_100.txt"
-
-with open(filename, "r") as f:
-    values = [float(v) for v in f.read().split()]
-
-n = len(values) // 2
-
-x = values[:n]
-y = values[n:]
-
-plt.plot(x, y)
-plt.scatter(x, y, s=8)
-plt.xlabel("x")
-plt.ylabel("y")
-plt.grid(True)
-plt.show()
+```bash
+python3 scripts/analyze_vortex_results.py \
+    --input results \
+    --output figures \
+    --L 1.0 \
+    --u1 2.0 \
+    --u2 1.0 \
+    --times 0 1 2 4.5 \
+    --compare-time 4.5 \
+    --fps 12
 ```
 
-Do animacji można wykorzystać kolejne pliki `wyniki_*.txt` jako klatki czasowe symulacji.
+Skrypt generuje:
 
-## Uwagi
+- wykresy powierzchni wirowej w kilku chwilach czasu,
+- widma Fouriera w kilku chwilach czasu,
+- wykres przepływu przez `y=0`,
+- animację GIF powierzchni wirowej i widma,
+- porównania między różnymi wartościami `delta`.
 
-Program zapisuje wyniki tylko z procesu o randze 0.
+## Przykładowe wyniki
 
-Obliczenia prędkości są wykonywane równolegle przez wszystkie procesy MPI.
+Po uruchomieniu skryptu w folderze `figures/` pojawią się pliki podobne do:
 
-Parametr `delta` wpływa zarówno na regularizację jądra prędkości, jak i na początkową liczbę punktów dyskretyzacji.
+```text
+figures/plots/sheet_snapshots_delta_0.1.png
+figures/plots/spectrum_snapshots_delta_0.1.png
+figures/plots/flow_delta_0.1.png
+figures/animations/vortex_delta_0.1.gif
+figures/comparisons/comparison_sheet_t_4.5.png
+figures/comparisons/comparison_spectrum_t_4.5.png
+figures/comparisons/comparison_flow_delta.png
+```
+
+Przykład umieszczenia wyników w README:
+
+```markdown
+![Ewolucja powierzchni wirowej](figures/plots/sheet_snapshots_delta_0.1.png)
+
+![Widmo Fouriera](figures/plots/spectrum_snapshots_delta_0.1.png)
+
+![Przepływ przez y=0](figures/plots/flow_delta_0.1.png)
+
+![Animacja powierzchni wirowej](figures/animations/vortex_delta_0.1.gif)
+```
+
+## Porównanie wpływu regularyzacji
+
+Dla wielu wartości `delta` można uruchomić analizę:
+
+```bash
+python3 scripts/analyze_vortex_results.py \
+    --input results \
+    --output figures \
+    --deltas 0.5 0.25 0.05 0.01 \
+    --times 0 1 2 4.5 \
+    --compare-time 4.5
+```
+
+Skrypt wygeneruje porównania:
+
+```text
+figures/comparisons/comparison_sheet_t_4.5.png
+figures/comparisons/comparison_spectrum_t_4.5.png
+figures/comparisons/comparison_flow_delta.png
+```
+
+Przykładowe wstawienie do README:
+
+```markdown
+![Porównanie powierzchni wirowej dla różnych delta](figures/comparisons/comparison_sheet_t_4.5.png)
+
+![Porównanie widma Fouriera dla różnych delta](figures/comparisons/comparison_spectrum_t_4.5.png)
+
+![Porównanie przepływu dla różnych delta](figures/comparisons/comparison_flow_delta.png)
+```
+
+## Porównanie nowych i starych wyników
+
+Jeżeli stare wyniki znajdują się w folderze `old_results/`, można wykonać porównanie:
+
+```bash
+python3 scripts/analyze_vortex_results.py \
+    --input results \
+    --old-input old_results \
+    --output figures \
+    --deltas 0.5 0.25 0.05 0.01 \
+    --compare-time 4.5
+```
+
+Wtedy skrypt wygeneruje pliki:
+
+```text
+figures/comparisons/old_vs_new_delta_0.5_t_4.5.png
+figures/comparisons/old_vs_new_delta_0.25_t_4.5.png
+figures/comparisons/old_vs_new_delta_0.05_t_4.5.png
+figures/comparisons/old_vs_new_delta_0.01_t_4.5.png
+```
+
+Przykład wstawienia do README:
+
+```markdown
+![Porównanie stare vs nowe wyniki](figures/comparisons/old_vs_new_delta_0.05_t_4.5.png)
+```
+
+Porównanie nowych i starych wyników jest przydatne szczególnie dlatego, że aktualna wersja programu wykonuje obliczenia w typie `double`, a nie w typie o mniejszej precyzji. Dla małych wartości `delta` i dłuższych czasów symulacji większa precyzja może poprawiać stabilność wyników oraz ograniczać błędy zaokrągleń.
+
+## Interpretacja wykresów
+
+### Powierzchnia wirowa
+
+Wykres powierzchni wirowej pokazuje przestrzenną ewolucję punktów wirowych. Dla mniejszych wartości `delta` mogą pojawiać się mniejsze i ostrzejsze struktury. Dla większych wartości `delta` rozwój małych skal jest silniej tłumiony.
+
+### Widmo Fouriera
+
+Widmo Fouriera pokazuje, które skale przestrzenne są obecne w rozwiązaniu. Niskie mody odpowiadają dużym strukturom, a wysokie mody odpowiadają małym skalom.
+
+Dla mniejszych wartości `delta` energia może przesuwać się w stronę wyższych modów, co oznacza rozwój mniejszych struktur. Dla większego `delta` wysokie mody są silniej tłumione.
+
+### Przepływ przez `y=0`
+
+Przepływ przez `y=0` jest liczony na podstawie składowej pionowej prędkości `Uy` próbkowanej na osi `y=0`.
+
+W skrypcie liczona jest głównie wielkość:
+
+```text
+integral |Uy| dx
+```
+
+czyli miara intensywności przepływu przez początkową powierzchnię rozdziału. Wielkość ze znakiem:
+
+```text
+integral Uy dx
+```
+
+jest również zapisywana na wykresie, ale w układzie periodycznym może się częściowo znosić.
+
+## Najważniejsze obserwacje
+
+Typowe wyniki są zgodne z oczekiwaniami dla niestabilności Kelvina-Helmholtza:
+
+- powierzchnia wirowa zaczyna się zwijać i tworzyć struktury wirowe,
+- parametr `delta` kontroluje tempo i skalę rozwoju wirów,
+- mniejsze `delta` pozwala na rozwój drobniejszych struktur,
+- większe `delta` działa wygładzająco,
+- widmo Fouriera odzwierciedla obecność małych i dużych skal,
+- przepływ przez `y=0` opisuje intensywność mieszania między warstwami,
+- zaburzenie początkowe wpływa na charakter późniejszych struktur.
+
+## Bibliografia
+
+[1] Robert Krasny,  
+**Desingularization of Periodic Vortex Sheet Roll-up**,  
+Journal of Computational Physics, Volume 65, Issue 2, 1986, pp. 292-313.  
+DOI: `10.1016/0021-9991(86)90210-X`
+
+[2] Vladimir Parezanović, Jean-Charles Laurentie, Carine Fourment, Joel Delville, Jean-Paul Bonnet, Andreas Spohn, Thomas Duriez, Laurent Cordier, Bernd R. Noack, Markus Abel, Marc Segond, Tamir Shaqarin, Steven L. Brunton,  
+**Mixing Layer Manipulation Experiment: From Open-Loop Forcing to Closed-Loop Machine Learning Control**,  
+Flow, Turbulence and Combustion, Volume 94, 2015, pp. 155-173.  
+DOI: `10.1007/s10494-014-9581-1`
+
+[3] Kelvin-Helmholtz instability,  
+Wikipedia, dostęp: 31.05.2024.  
+`https://en.wikipedia.org/wiki/Kelvin%E2%80%93Helmholtz_instability`
