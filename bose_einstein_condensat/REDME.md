@@ -8,9 +8,15 @@ The condensate is described by a complex wave function. Its squared modulus repr
 
 ---
 
-## Project Goal
+## Project Goal and Main Contribution
 
-The goal of the project was to investigate vortex formation and phase-imprinting effects in a two-dimensional Bose-Einstein condensate.
+The goal of the project was to investigate vortex formation and phase-imprinting effects in a two-dimensional rotating Bose-Einstein condensate described by the Gross-Pitaevskii equation.
+
+**The main contribution of this work is a numerical study of potential-induced phase imprinting in a rotating Bose-Einstein condensate.** In particular, the project investigates whether a vortex and density structure prepared by an external potential can remain visible in the real-time dynamics of the condensate after this potential is switched off.
+
+**The key physical idea is that the external potential can imprint structural information into the condensate wave function.** This means that the potential does not only shape the instantaneous density distribution, but can also influence the later evolution of the condensate after the potential has been removed.
+
+Compared with a basic Gross-Pitaevskii simulation, this project focuses not only on obtaining stationary vortex states, but also on analyzing how the parameters of the external potential and the condensate determine the later vortex dynamics. The simulations study the relation between the optical lattice depth, lattice wave numbers, nonlinear interaction strength, angular velocity, and the resulting local and global motion of the condensate.
 
 In particular, the project studies:
 
@@ -20,13 +26,17 @@ In particular, the project studies:
 - influence of nonlinear interaction strength `beta`,
 - influence of the optical-lattice depth `V0`,
 - influence of the optical-lattice wave numbers `kappa1` and `kappa2`,
-- imaginary-time evolution used to obtain stationary states,
+- imaginary-time evolution used to obtain stationary or prepared states,
 - real-time evolution after changing or switching off part of the potential,
 - angular momentum of the condensate,
+- relation between local vortex structures and global rotation of the condensate,
 - whether the later vortex structure preserves information about the initially prepared state.
 
-The main idea was to prepare the condensate in a chosen external potential and then observe its later evolution. In this sense, the potential can imprint a characteristic density and vortex structure into the condensate, which may remain visible after the potential is changed.
+**The results suggest that potential-induced phase imprinting can persist in a rotating Bose-Einstein condensate even after the imprinting potential has been switched off.** This imprint remains visible in the later real-time evolution through the local vortex arrangement and the global rotation of the condensate density pattern.
 
+Therefore, the physical contribution of the project can be summarized as follows:
+
+**An external potential can prepare a characteristic vortex and density structure in a rotating condensate, and this structure can continue to influence the condensate dynamics after the potential is removed.**
 ---
 
 ## Physical Background
