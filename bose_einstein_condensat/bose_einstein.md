@@ -2,9 +2,9 @@
 
 Numerical simulation of a two-dimensional Bose-Einstein condensate using the Gross-Pitaevskii equation.
 
-The project focuses on the numerical investigation of vortex structures in a rotating Bose-Einstein condensate placed in harmonic and optical-lattice potentials. The simulation includes imaginary-time evolution for finding approximate ground states and real-time evolution for studying the later dynamics of the condensate.
+The project focuses on the numerical investigation of vortex structures in a rotating Bose-Einstein condensate placed in external trapping potentials. The simulation includes imaginary-time evolution for obtaining approximate stationary states and real-time evolution for studying the later dynamics of the condensate after modifying the potential.
 
-The condensate is described by a complex wave function. Its squared modulus represents the particle density, while the phase of the wave function determines the local flow structure and vortex configuration.
+The condensate is described by a complex wave function. Its squared modulus represents the particle density, while the phase of the wave function is related to the local flow and vortex structure.
 
 ---
 
@@ -14,21 +14,24 @@ The goal of the project was to investigate vortex formation and phase-imprinting
 
 In particular, the project studies:
 
-- the ground-state density of the condensate,
-- vortex structures in a rotating frame,
+- density structure of the condensate,
+- vortex formation in a rotating frame,
 - influence of angular velocity `omega`,
 - influence of nonlinear interaction strength `beta`,
 - influence of the optical-lattice depth `V0`,
 - influence of the optical-lattice wave numbers `kappa1` and `kappa2`,
 - imaginary-time evolution used to obtain stationary states,
-- real-time evolution after changing or removing part of the potential,
-- angular momentum of the condensate.
+- real-time evolution after changing or switching off part of the potential,
+- angular momentum of the condensate,
+- whether the later vortex structure preserves information about the initially prepared state.
+
+The main idea was to prepare the condensate in a chosen external potential and then observe its later evolution. In this sense, the potential can imprint a characteristic density and vortex structure into the condensate, which may remain visible after the potential is changed.
 
 ---
 
 ## Physical Background
 
-A Bose-Einstein condensate is an ultracold quantum gas in which a macroscopic number of bosons occupy the same quantum state. In the mean-field approximation, the state of the condensate can be described by a single complex wave function:
+A Bose-Einstein condensate is an ultracold quantum gas in which a macroscopic number of bosons occupy the same quantum state. In the mean-field approximation, the condensate can be described by a single complex wave function:
 
 ```math
 \psi(x,y,t)
@@ -102,7 +105,7 @@ models mean-field interactions between particles in the condensate.
 
 ## Potentials
 
-Two types of potentials are used in the simulation.
+Two main types of potentials are used in the simulation.
 
 ### Harmonic Potential
 
@@ -137,7 +140,7 @@ where:
 - `kappa1` is the wave number in the `x` direction,
 - `kappa2` is the wave number in the `y` direction.
 
-The total potential can be written as:
+The total potential can include both harmonic confinement and the optical lattice:
 
 ```math
 V(x,y)
@@ -153,7 +156,7 @@ depending on the selected simulation setup.
 
 ## Initial State
 
-The initial wave function is chosen in the form:
+The initial wave function can be chosen in the form:
 
 ```math
 \psi_0(x,y)
@@ -169,8 +172,7 @@ ik\sqrt{x^2+y^2}
 where:
 
 - `p` controls the initial spatial width of the condensate,
-- `k` introduces an initial phase profile,
-- the phase term can be used as a simple phase-imprinting mechanism.
+- `k` controls the initial radial phase profile.
 
 After initialization, the wave function is normalized numerically:
 
@@ -180,11 +182,13 @@ After initialization, the wave function is normalized numerically:
 \frac{\psi}{\sqrt{\int |\psi|^2\,dx\,dy}}
 ```
 
+The phase term defines the initial phase profile of the wave function. In the main phase-imprinting analysis, however, the important effect comes from preparing the condensate in a structured potential and then observing its later real-time evolution after the potential is modified.
+
 ---
 
 ## Imaginary-Time Evolution
 
-Imaginary-time evolution is used to find an approximate ground state of the condensate.
+Imaginary-time evolution is used to obtain an approximate stationary state of the condensate.
 
 The idea is to substitute:
 
@@ -209,15 +213,15 @@ Because the norm would otherwise decay during imaginary-time propagation, the wa
 \int |\psi|^2\,dx\,dy = 1
 ```
 
-In this project, the imaginary-time solver is used to obtain the condensate state before analyzing vortex structures or starting real-time evolution.
+In this project, imaginary-time evolution is used to prepare the condensate in a chosen external potential before analyzing vortex structures or starting real-time evolution.
 
 ---
 
 ## Real-Time Evolution
 
-Real-time evolution is used to study the dynamics of the condensate after the initial state has been prepared.
+Real-time evolution is used to study the dynamics of the condensate after a prepared state has been obtained.
 
-In this mode, the equation keeps its original Schrödinger-like form:
+In this mode, the equation keeps its Schrödinger-like form:
 
 ```math
 i\frac{\partial \psi}{\partial t}
@@ -225,15 +229,51 @@ i\frac{\partial \psi}{\partial t}
 H[\psi]\psi
 ```
 
-This allows observing how the density and vortex structure evolve after changing the potential, for example after switching off the optical lattice.
+This allows observing how the density and vortex structure evolve after the potential is changed, for example after switching off the optical lattice.
 
 A typical workflow is:
 
-1. Compute the ground state using imaginary-time evolution.
+1. Compute a prepared state using imaginary-time evolution.
 2. Save the final wave function.
 3. Use this wave function as the initial condition for real-time evolution.
 4. Modify the potential, for example by removing the optical lattice.
 5. Observe the later density and vortex dynamics.
+
+---
+
+## Phase Imprinting and Real-Time Evolution
+
+In this project, phase imprinting is understood as preparing a characteristic condensate structure using an external potential and then observing how this structure affects later real-time evolution.
+
+The condensate is first evolved in a selected potential, for example in a harmonic trap or in an optical lattice. This potential shapes the density and vortex structure of the wave function. After this prepared state is obtained, the system can be evolved in real time after modifying or switching off part of the potential.
+
+A typical phase-imprinting workflow is:
+
+1. Prepare the condensate state in a selected external potential.
+2. Obtain a characteristic density and vortex structure.
+3. Start real-time evolution from this prepared state.
+4. Modify the potential, for example by switching off the optical lattice.
+5. Observe whether the later vortex pattern preserves information about the initially prepared structure.
+
+In this sense, the initial potential imprints information into the condensate wave function. The later dynamics is not independent of the preparation stage: similar initial vortex structures may lead to similar later geometries.
+
+The rotation and deformation of the vortex pattern can also be compared with the angular momentum of the condensate:
+
+```math
+\langle L_z \rangle
+=
+\int
+\psi^*
+L_z
+\psi
+\,dx\,dy
+```
+
+The simulations therefore connect three elements:
+
+- the potential used to prepare the condensate,
+- the vortex and density structure obtained after preparation,
+- the later real-time evolution after the potential is changed.
 
 ---
 
@@ -311,22 +351,16 @@ L_z
 
 This quantity is used to characterize the rotating state and to compare configurations with different vortex structures.
 
----
-
-## Phase Imprinting
-
-Phase imprinting means deliberately modifying the phase of the condensate wave function. Since the velocity field of a condensate is related to the gradient of the phase, changing the phase can generate flow patterns and influence vortex formation.
-
-In this project, phase imprinting is represented by the phase factor in the initial condition:
+In the numerical implementation, the integral is approximated on the discrete grid:
 
 ```math
-\exp
-\left(
-ik\sqrt{x^2+y^2}
-\right)
+\langle L_z \rangle
+\approx
+\Delta x \Delta y
+\sum_{i,j}
+\psi_{i,j}^{*}
+\left(L_z\psi\right)_{i,j}
 ```
-
-The later evolution of the density and vortex pattern is then analyzed numerically.
 
 ---
 
@@ -340,6 +374,7 @@ The later evolution of the density and vortex pattern is then analyzed numerical
 │   └── run_name/
 │       ├── config.json
 │       ├── psi_ground.npy
+│       ├── psi_final.npy
 │       ├── psi_history.npy
 │       ├── angular_momentum.npy
 │       ├── potential.npy
@@ -528,9 +563,9 @@ Example visualizations produced by the project:
 
 A typical workflow consists of two stages.
 
-### Stage 1: Ground State Search
+### Stage 1: Preparation in Imaginary Time
 
-First, imaginary-time evolution is used to obtain a stationary state:
+First, imaginary-time evolution is used to obtain a prepared condensate state:
 
 ```bash
 python3 bec_simulation.py \
@@ -579,10 +614,25 @@ Typical observations include:
 - the nonlinear interaction strength `beta` changes the size and density profile of the condensate,
 - the optical lattice depth `V0` modifies the spatial density structure,
 - different values of `kappa1` and `kappa2` change the geometry of the lattice,
-- imaginary-time evolution is useful for finding approximate stationary states,
+- imaginary-time evolution is useful for preparing approximate stationary states,
 - real-time evolution is useful for observing later vortex dynamics,
 - angular momentum is connected with the rotation of the vortex structure,
-- phase imprinting can create initial phase patterns that influence the later condensate geometry.
+- the initially prepared density and vortex geometry can influence the later real-time evolution,
+- phase imprinting can be interpreted as preserving information about the initial potential-induced structure in the later condensate dynamics.
+
+---
+
+## Notes on Code Organization
+
+For a clean repository version, the simulation should not store parameters directly in the filename. Instead, the recommended approach is:
+
+1. Provide parameters from the command line.
+2. Create a separate output folder for every run.
+3. Save all parameters to `config.json`.
+4. Save numerical arrays as `.npy` files.
+5. Save plots and animations as `.png` and `.gif` files.
+
+This makes the results easier to reproduce and compare.
 
 ---
 
