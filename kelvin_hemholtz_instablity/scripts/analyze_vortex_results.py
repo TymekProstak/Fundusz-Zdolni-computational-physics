@@ -320,7 +320,12 @@ def plot_sheet_snapshots(delta_text, selected_states, output_dir):
 
     n = len(selected_states)
 
-    fig, axes = plt.subplots(n, 1, figsize=(10, 2.6 * n), sharex=True)
+    fig, axes = plt.subplots(
+        n,
+        1,
+        figsize=(10, 2.8 * n),
+        sharex=True
+    )
 
     if n == 1:
         axes = [axes]
@@ -342,13 +347,20 @@ def plot_sheet_snapshots(delta_text, selected_states, output_dir):
         ax.set_ylabel("y")
 
         ax.set_title(
-            f"delta={delta_text}, step={state.step}, t={state.time:.4g}"
+            f"delta={delta_text}, step={state.step}, t={state.time:.4g}",
+            fontsize=10,
+            pad=8
         )
 
     axes[-1].set_xlabel("x")
 
-    fig.suptitle(f"Vortex sheet evolution, delta={delta_text}", fontsize=14)
-    fig.tight_layout()
+    fig.suptitle(
+        f"Vortex sheet evolution, delta={delta_text}",
+        fontsize=15,
+        y=0.995
+    )
+
+    fig.tight_layout(rect=[0.0, 0.0, 1.0, 0.955])
 
     path = output_dir / f"sheet_snapshots_delta_{delta_text}.png"
     fig.savefig(path, dpi=160)

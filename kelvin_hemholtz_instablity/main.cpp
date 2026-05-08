@@ -607,7 +607,7 @@ int main(int argc, char** argv) {
     double u1 = 2.0;
     double u2 = 1.0;
     double czas_symulacji = 10.0;
-    double delta = 0.1;
+    double delta = 0.5;
 
     if (argc == 6) {
         L = std::atof(argv[1]);
