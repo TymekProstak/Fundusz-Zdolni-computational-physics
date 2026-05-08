@@ -21,7 +21,7 @@ In particular, the project investigates:
 - comparison of results for different initial perturbations,
 - influence of numerical precision on stability and quality of the results.
 
-The main difference compared with earlier results was the use of `double` precision instead of `float`, together with parallel computation. This made it possible to extend the simulation time, reduce the discretization scale, and study the development of vortex structures more accurately in comparison with earlier numerical works.
+The main difference compared with earlier results was the use of `double` precision instead of `float`, together with parallel computation. This made it possible to extend the simulation time, reduce the discretization scale( from 0.25 to even 0.01, making the beheviour therefoure much more turbulent and realistic in low scales) , and study the development of vortex structures more accurately in comparison with earlier numerical works.
 
 Additionally, compared with the basic approach, the project studies not only the time evolution of the vortex sheet, but also its Fourier spectrum and the flow through the initial separation surface.
 
