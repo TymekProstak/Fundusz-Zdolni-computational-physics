@@ -40,6 +40,11 @@ The following assumptions are used in the model:
 - sinusoidal or random initial perturbation,
 - regularization of small scales by the parameter `delta`.
 
+The implementation allows switching between two initial perturbation modes:
+
+- `noise` — uniformly distributed random perturbation,
+- `sin` — sinusoidal perturbation.
+
 In an inviscid model, the vortex sheet may develop very small-scale structures. Since resolving arbitrarily small scales is impossible numerically, regularization is introduced to make the problem computationally tractable.
 
 ---
@@ -360,26 +365,71 @@ L = 1.0
 u1 = 2.0
 u2 = 1.0
 time = 10.0
-delta = 0.1
+delta = 0.25
+perturbation = noise
+output_dir = results
 ```
 
-Parameters can also be passed manually:
+The initial perturbation can be selected directly:
+
+```bash
+mpirun -np 4 ./vortex_sheet noise
+```
+
+```bash
+mpirun -np 4 ./vortex_sheet sin
+```
+
+Available perturbation modes:
+
+```text
+noise, random, uniform  -> uniformly distributed random perturbation
+sin, sine, sinus        -> sinusoidal perturbation
+```
+
+The output directory can also be selected:
+
+```bash
+mpirun -np 4 ./vortex_sheet noise results_noise
+```
+
+```bash
+mpirun -np 4 ./vortex_sheet sin results_sin
+```
+
+Parameters can be passed manually:
 
 ```bash
 mpirun -np 4 ./vortex_sheet L u1 u2 time delta
 ```
 
-Example:
+The perturbation mode can be added as the sixth argument:
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 300.0 0.1
+mpirun -np 4 ./vortex_sheet L u1 u2 time delta perturbation
+```
+
+The output directory can be added as the seventh argument:
+
+```bash
+mpirun -np 4 ./vortex_sheet L u1 u2 time delta perturbation output_dir
+```
+
+Examples:
+
+```bash
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 noise results_noise
+```
+
+```bash
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 sin results_sin
 ```
 
 ---
 
 ## Output Files
 
-The program saves results to the `results/` folder.
+The program saves results to the selected output folder, for example `results/`, `results_noise/`, or `results_sin/`.
 
 ### `wyniki_*.txt` Files
 
@@ -396,9 +446,9 @@ First all `x` coordinates are written, followed by all `y` coordinates.
 Example:
 
 ```text
-results/wyniki_0.1_0.txt
-results/wyniki_0.1_10.txt
-results/wyniki_0.1_20.txt
+results/wyniki_0.25_0.txt
+results/wyniki_0.25_10.txt
+results/wyniki_0.25_20.txt
 ```
 
 ### `predkosc_*.txt` Files
@@ -460,6 +510,14 @@ python3 scripts/analyze_vortex_results.py \
     --fps 12
 ```
 
+For a separate output folder, for example `results_noise/`, use:
+
+```bash
+python3 scripts/analyze_vortex_results.py \
+    --input results_noise \
+    --output figures_noise
+```
+
 Specific time instants can also be selected manually:
 
 ```bash
@@ -479,8 +537,7 @@ The script generates:
 - plots of the vortex sheet at several time instants,
 - Fourier spectra at several time instants,
 - a plot of the flow through `y=0`,
-- a GIF animation of the vortex sheet and its spectrum,
-- comparisons between different values of `delta`, if more than one `delta` is available.
+- a GIF animation of the vortex sheet and its spectrum.
 
 ---
 
@@ -567,72 +624,52 @@ However, in a periodic domain, the signed quantity may partially cancel out. For
 
 After running the analysis script, selected plots and animations are saved in the `figures/` directory.
 
-The exact filenames depend on the available values of `delta` and on the time reached by the simulation. For example, for `delta=0.1`, the script may generate:
+The exact filenames depend on the available values of `delta` and on the time reached by the simulation. For example, for `delta=0.25`, the script generates files similar to:
 
 ```text
-figures/plots/sheet_snapshots_delta_0.1.png
-figures/plots/spectrum_snapshots_delta_0.1.png
-figures/plots/flow_delta_0.1.png
-figures/animations/vortex_delta_0.1.gif
-figures/comparisons/comparison_sheet_t_2.1875.png
-figures/comparisons/comparison_spectrum_t_2.1875.png
-figures/comparisons/comparison_flow_delta.png
+figures/plots/sheet_snapshots_delta_0.25.png
+figures/plots/spectrum_snapshots_delta_0.25.png
+figures/plots/flow_delta_0.25.png
+figures/animations/vortex_delta_0.25.gif
 ```
-
-The images below are displayed only if the corresponding files exist and are committed to the repository.
 
 ### Vortex Sheet Evolution
 
-![Vortex sheet evolution](figures/plots/sheet_snapshots_delta_0.1.png)
+![Vortex sheet evolution](figures/plots/sheet_snapshots_delta_0.25.png)
 
 ### Fourier Spectrum
 
-![Fourier spectrum](figures/plots/spectrum_snapshots_delta_0.1.png)
+![Fourier spectrum](figures/plots/spectrum_snapshots_delta_0.25.png)
 
 ### Flow Through the Initial Interface
 
-![Flow through y=0](figures/plots/flow_delta_0.1.png)
+![Flow through y=0](figures/plots/flow_delta_0.25.png)
 
 ### Vortex Sheet Animation
 
-![Vortex sheet animation](figures/animations/vortex_delta_0.1.gif)
-
-### Comparison of the Vortex Sheet for Different Regularization Values
-
-![Comparison of the vortex sheet for different delta values](figures/comparisons/comparison_sheet_t_2.1875.png)
-
-### Comparison of Fourier Spectra for Different Regularization Values
-
-![Comparison of Fourier spectra for different delta values](figures/comparisons/comparison_spectrum_t_2.1875.png)
-
-### Comparison of Flow for Different Regularization Values
-
-![Comparison of flow for different delta values](figures/comparisons/comparison_flow_delta.png)
-
-If a comparison image uses another time value, the filename in the markdown should be changed to match the file generated by the script.
+![Vortex sheet animation](figures/animations/vortex_delta_0.25.gif)
 
 ---
 
 ## Comparison of the Regularization Effect
 
-For multiple values of `delta`, the analysis can be run as:
+For multiple values of `delta`, the simulation can be run several times, each time with a different value of `delta`. The resulting folders can then be analyzed separately or combined manually for comparison.
+
+Example runs:
 
 ```bash
-python3 scripts/analyze_vortex_results.py \
-    --input results \
-    --output figures \
-    --deltas 0.5 0.25 0.05 0.01
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.5 noise results_delta_0_5
 ```
 
-The script automatically chooses the last common available comparison time and generates comparison plots such as:
-
-```text
-figures/comparisons/comparison_sheet_t_<time>.png
-figures/comparisons/comparison_spectrum_t_<time>.png
-figures/comparisons/comparison_flow_delta.png
+```bash
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 noise results_delta_0_25
 ```
 
-The exact filename should always match the file generated by the script.
+```bash
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.1 noise results_delta_0_1
+```
+
+The regularization parameter controls how much small-scale structure is allowed to develop. Larger values of `delta` smooth the solution, while smaller values allow sharper and more complex vortex structures.
 
 ---
 
@@ -686,24 +723,6 @@ is also plotted, but in a periodic system it may partially cancel out. Therefore
 
 ---
 
-## Comparison with Reference Results
-
-At the end of the analysis, a comparison between the results obtained in this implementation and earlier reference results or an older visualization can be added. The most convenient way is to insert a single comparison image, for example a side-by-side figure showing the old graphic and the new plot generated by the script.
-
-Example file structure:
-
-```text
-figures/comparisons/reference_vs_current.png
-```
-
-Example image reference:
-
-![Comparison of the reference result with the current simulation](figures/comparisons/reference_vs_current.png)
-
-Such an image can be prepared manually by combining a screenshot of the earlier graphic with the current plot generated by the script. This makes the comparison clearer than automatic comparison of raw output files, especially if the old data were stored in a different format or came directly from an article or an earlier presentation.
-
----
-
 ## Main Observations
 
 Typical results are consistent with the expected behavior of the Kelvin-Helmholtz instability:
@@ -737,3 +756,4 @@ DOI: `10.1007/s10494-014-9581-1`
 [3] Kelvin-Helmholtz instability,  
 Wikipedia, accessed: 31.05.2024.  
 `https://en.wikipedia.org/wiki/Kelvin%E2%80%93Helmholtz_instability`
+```
