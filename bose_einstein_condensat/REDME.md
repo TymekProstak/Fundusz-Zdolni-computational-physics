@@ -33,10 +33,6 @@ In particular, the project studies:
 - whether the later vortex structure preserves information about the initially prepared state.
 
 **The results suggest that potential-induced phase imprinting can persist in a rotating Bose-Einstein condensate even after the imprinting potential has been switched off.** This imprint remains visible in the later real-time evolution through the local vortex arrangement and the global rotation of the condensate density pattern.
-
-Therefore, the physical contribution of the project can be summarized as follows:
-
-**An external potential can prepare a characteristic vortex and density structure in a rotating condensate, and this structure can continue to influence the condensate dynamics after the potential is removed.**
 ---
 
 ## Physical Background
