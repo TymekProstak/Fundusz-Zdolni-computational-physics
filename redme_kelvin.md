@@ -17,13 +17,15 @@ W szczególności badane były:
 - rozkład Fouriera indukowanej prędkości,
 - przepływ przez powierzchnię `y=0`,
 - porównanie wyników dla różnych zaburzeń początkowych,
-- porównanie nowych wyników z wcześniejszymi wynikami referencyjnymi.
+- wpływ precyzji obliczeń na stabilność i jakość wyników.
 
-Główną rożnicą , względem dotychczas zaprezentowanych rezultatów było wykorzystanie obliczeń w typie `double`, zamiast `float` oraz obliczeń równoległych, co pozowaliło na zwiększenie czasu symulacji oraz zmienjszenie skali dyksretyzacji względem orginalnej pracy z lat 90 -tych. Dodatkoweo względem bazwoej pracy zbadany nie tlykjo czasoawą eowalcuje wiró, ale takżę ich widmo oraz przepływ przez powierzchnię zaburzenia
+Główną różnicą względem wcześniejszych rezultatów było wykorzystanie obliczeń w typie `double` zamiast `float` oraz zastosowanie obliczeń równoległych. Pozwoliło to na wydłużenie czasu symulacji, zmniejszenie skali dyskretyzacji oraz dokładniejsze badanie rozwoju struktur wirowych w porównaniu z oryginalnymi pracami numerycznymi z lat 80. i 90.
+
+Dodatkowo, względem bazowego podejścia, badana była nie tylko czasowa ewolucja powierzchni wirowej, ale także jej widmo Fouriera oraz przepływ przez początkową powierzchnię rozdziału.
 
 ## Tło fizyczne
 
-Niestabilność Kelvina-Helmholtza pojawia się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. Małe zaburzenie granicy między warstwami może zostać wzmocnione przez pole prędkości indukowane przez samą powierzchnię wirową. W wyniku tego powierzchnia zaczyna się zwijać i tworzyć charakterystyczne struktury wirowe. 
+Niestabilność Kelvina-Helmholtza pojawia się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. Małe zaburzenie granicy między warstwami może zostać wzmocnione przez pole prędkości indukowane przez samą powierzchnię wirową. W wyniku tego powierzchnia zaczyna się zwijać i tworzyć charakterystyczne struktury wirowe.
 
 W modelu przyjęto następujące założenia:
 
@@ -314,47 +316,23 @@ Przykładowe wstawienie do README:
 ![Porównanie przepływu dla różnych delta](figures/comparisons/comparison_flow_delta.png)
 ```
 
-## Porównanie nowych i starych wyników
-
-Jeżeli stare wyniki znajdują się w folderze `old_results/`, można wykonać porównanie:
-
-```bash
-python3 scripts/analyze_vortex_results.py \
-    --input results \
-    --old-input old_results \
-    --output figures \
-    --deltas 0.5 0.25 0.05 0.01 \
-    --compare-time 4.5
-```
-
-Wtedy skrypt wygeneruje pliki:
-
-```text
-figures/comparisons/old_vs_new_delta_0.5_t_4.5.png
-figures/comparisons/old_vs_new_delta_0.25_t_4.5.png
-figures/comparisons/old_vs_new_delta_0.05_t_4.5.png
-figures/comparisons/old_vs_new_delta_0.01_t_4.5.png
-```
-
-Przykład wstawienia do README:
-
-```markdown
-![Porównanie stare vs nowe wyniki](figures/comparisons/old_vs_new_delta_0.05_t_4.5.png)
-```
-
-Porównanie nowych i starych wyników jest przydatne szczególnie dlatego, że aktualna wersja programu wykonuje obliczenia w typie `double`, a nie w typie o mniejszej precyzji. Dla małych wartości `delta` i dłuższych czasów symulacji większa precyzja może poprawiać stabilność wyników oraz ograniczać błędy zaokrągleń.
-
 ## Interpretacja wykresów
 
 ### Powierzchnia wirowa
 
 Wykres powierzchni wirowej pokazuje przestrzenną ewolucję punktów wirowych. Dla mniejszych wartości `delta` mogą pojawiać się mniejsze i ostrzejsze struktury. Dla większych wartości `delta` rozwój małych skal jest silniej tłumiony.
 
+W praktyce parametr `delta` kontroluje to, jak drobne struktury mogą pojawić się w rozwiązaniu. Większa wartość regularyzacji wygładza powierzchnię wirową i opóźnia powstawanie mniejszych struktur. Mniejsza wartość regularyzacji pozwala na szybszy rozwój małych skal, przez co rozwiązanie ma bardziej złożony, lokalnie turbulentny charakter.
+
 ### Widmo Fouriera
 
-Widmo Fouriera pokazuje, które skale przestrzenne są obecne w rozwiązaniu. Niskie mody odpowiadają dużym strukturom, a wysokie mody odpowiadają małym skalom.
+Widmo Fouriera pokazuje, które skale przestrzenne są obecne w rozwiązaniu. Niskie mody odpowiadają dużym strukturom przestrzennym, a wysokie mody odpowiadają małym skalom.
 
-Dla mniejszych wartości `delta` energia może przesuwać się w stronę wyższych modów, co oznacza rozwój mniejszych struktur. Dla większego `delta` wysokie mody są silniej tłumione.
+Dla większych wartości `delta` maksimum widma zwykle przypada na charakterystyczną skalę głównych wirów widocznych w danej chwili czasu. Oznacza to, że w rozwiązaniu dominuje jedna większa struktura lub kilka struktur o podobnej skali.
+
+Dla małych wartości `delta` rozwiązanie ma bardziej złożony charakter. W początkowej fazie energia może pojawiać się w wyższych modach, co odpowiada rozwojowi mniejszych struktur. Następnie, wraz z postępem zwijania powierzchni, mniejsze wiry zaczynają łączyć się i zawijać wokół większych ośrodków wirowych. W takim przypadku maksimum widma może przesuwać się od modów odpowiadających małym zaburzeniom w stronę modów związanych z większymi strukturami, które powstają przez grupowanie i zwijanie mniejszych wirów.
+
+W przypadku bardziej turbulentnego charakteru rozwiązania widmo nie opisuje już tylko jednej dominującej skali. Zamiast tego pokazuje obecność wielu skal jednocześnie: dużych wirów organizujących ruch oraz mniejszych struktur powstających wewnątrz nich.
 
 ### Przepływ przez `y=0`
 
@@ -374,6 +352,24 @@ integral Uy dx
 
 jest również zapisywana na wykresie, ale w układzie periodycznym może się częściowo znosić.
 
+## Porównanie z wynikami referencyjnymi
+
+Na końcu analizy można dodać porównanie wyników uzyskanych w tej implementacji z wcześniejszymi wynikami referencyjnymi lub z wcześniejszą wersją wizualizacji. Najwygodniej zrobić to przez wstawienie jednego obrazu porównawczego, na przykład zestawienia starej grafiki i nowego wykresu wygenerowanego przez skrypt.
+
+Przykładowa struktura plików:
+
+```text
+figures/comparisons/reference_vs_current.png
+```
+
+Przykładowe wstawienie do README:
+
+```markdown
+![Porównanie wyniku referencyjnego z aktualną symulacją](figures/comparisons/reference_vs_current.png)
+```
+
+Taki obraz można przygotować ręcznie, łącząc zrzut wcześniejszej grafiki z aktualnym wykresem wygenerowanym przez skrypt. Dzięki temu porównanie jest bardziej czytelne niż automatyczne zestawianie surowych plików wynikowych, szczególnie jeżeli stare dane były zapisane w innym formacie albo pochodziły bezpośrednio z artykułu lub wcześniejszej prezentacji.
+
 ## Najważniejsze obserwacje
 
 Typowe wyniki są zgodne z oczekiwaniami dla niestabilności Kelvina-Helmholtza:
@@ -383,6 +379,9 @@ Typowe wyniki są zgodne z oczekiwaniami dla niestabilności Kelvina-Helmholtza:
 - mniejsze `delta` pozwala na rozwój drobniejszych struktur,
 - większe `delta` działa wygładzająco,
 - widmo Fouriera odzwierciedla obecność małych i dużych skal,
+- dla dużych wartości `delta` widmo jest zwykle związane z charakterystyczną skalą głównych wirów,
+- dla małych wartości `delta` energia widma może obejmować wiele modów, ponieważ rozwiązanie zawiera jednocześnie większe struktury i drobniejsze zaburzenia,
+- z czasem mniejsze struktury mogą zawijać się wokół większych ośrodków wirowych, co wpływa na przesuwanie maksimum widma,
 - przepływ przez `y=0` opisuje intensywność mieszania między warstwami,
 - zaburzenie początkowe wpływa na charakter późniejszych struktur.
 
