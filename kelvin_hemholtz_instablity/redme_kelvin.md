@@ -359,7 +359,7 @@ Default parameters:
 L = 1.0
 u1 = 2.0
 u2 = 1.0
-time = 300.0
+time = 10.0
 delta = 0.1
 ```
 
