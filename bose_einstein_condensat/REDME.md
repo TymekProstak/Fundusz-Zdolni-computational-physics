@@ -428,8 +428,8 @@ Example imaginary-time run:
 ```bash
 python3 bec_simulation.py \
     --mode imaginary \
-    --nx 401 \
-    --ny 401 \
+    --nx 101 \
+    --ny 101 \
     --domain 12 \
     --beta 500 \
     --omega 3.0 \
