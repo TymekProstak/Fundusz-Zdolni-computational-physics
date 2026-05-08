@@ -8,7 +8,7 @@ W projekcie powierzchnia wirowa jest reprezentowana przez dyskretne punkty wirow
 
 ## Cel projektu
 
-Celem projektu było odtworzenie i rozwinięcie wcześniejszych obliczeń numerycznych dotyczących niestabilności Kelvina-Helmholtza z wykorzystaniem współczesnych komputerów, obliczeń równoległych oraz większej precyzji numerycznej.
+Celem projektu było odtworzenie i rozwinięcie wcześniejszych obliczeń numerycznych dostępnych w literaturze przedmiotu dotyczących niestabilności Kelvina-Helmholtza z wykorzystaniem współczesnych komputerów, obliczeń równoległych oraz większej precyzji numerycznej.
 
 W szczególności badane były:
 
@@ -19,11 +19,11 @@ W szczególności badane były:
 - porównanie wyników dla różnych zaburzeń początkowych,
 - porównanie nowych wyników z wcześniejszymi wynikami referencyjnymi.
 
-Dodatkowym celem było sprawdzenie, jak wyniki zmieniają się po przejściu z obliczeń o mniejszej precyzji na obliczenia w typie `double`. Dzięki temu można było uzyskać stabilniejsze wyniki numeryczne, szczególnie dla mniejszych wartości regularyzacji oraz dla dłuższych czasów symulacji.
+Główną rożnicą , względem dotychczas zaprezentowanych rezultatów było wykorzystanie obliczeń w typie `double`, zamiast `float` oraz obliczeń równoległych, co pozowaliło na zwiększenie czasu symulacji oraz zmienjszenie skali dyksretyzacji względem orginalnej pracy z lat 90 -tych. Dodatkoweo względem bazwoej pracy zbadany nie tlykjo czasoawą eowalcuje wiró, ale takżę ich widmo oraz przepływ przez powierzchnię zaburzenia
 
 ## Tło fizyczne
 
-Niestabilność Kelvina-Helmholtza pojawia się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. Małe zaburzenie granicy między warstwami może zostać wzmocnione przez pole prędkości indukowane przez samą powierzchnię wirową. W wyniku tego powierzchnia zaczyna się zwijać i tworzyć charakterystyczne struktury wirowe.
+Niestabilność Kelvina-Helmholtza pojawia się na granicy dwóch warstw płynu poruszających się z różnymi prędkościami. Małe zaburzenie granicy między warstwami może zostać wzmocnione przez pole prędkości indukowane przez samą powierzchnię wirową. W wyniku tego powierzchnia zaczyna się zwijać i tworzyć charakterystyczne struktury wirowe. 
 
 W modelu przyjęto następujące założenia:
 
