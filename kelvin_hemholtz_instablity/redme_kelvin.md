@@ -219,6 +219,30 @@ where:
 
 ---
 
+## Computational Cost
+
+The target spacing between vortex points is selected as:
+
+```math
+\Delta l = 0.05\,\delta
+```
+
+Therefore, decreasing `delta` also decreases the spacing between vortex points and increases the number of points in the initial discretization.
+
+Since the direct vortex interaction calculation has approximately quadratic complexity,
+
+```math
+\mathcal{O}(N^2)
+```
+
+smaller values of `delta` significantly increase the computational cost. Additionally, the time step is proportional to the target spacing, so smaller `delta` also increases the number of time steps needed to reach the same physical simulation time.
+
+As a result, the total simulation time should be chosen according to the selected value of `delta`. Smaller `delta` values provide more detailed vortex structures, but they require more computation time and usually shorter practical simulation horizons.
+
+For quick tests, a short simulation time such as `3.0` seconds is useful. For more detailed studies, the simulation time can be increased, but the computational cost should be taken into account.
+
+---
+
 ## Regularization
 
 In an ideal inviscid vortex sheet model, the instability may develop at arbitrarily small scales. Numerically, this creates difficulties because smaller and smaller structures would require increasingly dense discretization and higher accuracy.
@@ -231,7 +255,8 @@ In practice:
 
 - large `delta` produces smoother vortex structures,
 - small `delta` allows finer and more turbulent-looking structures,
-- too small `delta` requires finer discretization and better numerical precision.
+- too small `delta` requires finer discretization and better numerical precision,
+- smaller `delta` increases the computational cost and may require reducing the simulated physical time.
 
 ---
 
@@ -358,14 +383,28 @@ The program can be run with default parameters:
 mpirun -np 4 ./vortex_sheet
 ```
 
+The `-np` option specifies the number of MPI processes used during the simulation. It is not a physical model parameter, but a parallel execution parameter. For example, `-np 4` runs the program using 4 MPI processes.
+
+This value can be changed depending on the available CPU resources:
+
+```bash
+mpirun -np 2 ./vortex_sheet
+```
+
+```bash
+mpirun -np 8 ./vortex_sheet
+```
+
+MPI processes are used to divide the vortex point computations between parallel workers. The most expensive part of the simulation is the evaluation of induced velocities, because each vortex point interacts with all other vortex points.
+
 Default parameters:
 
 ```text
 L = 1.0
 u1 = 2.0
 u2 = 1.0
-time = 10.0
-delta = 0.25
+time = 3.0
+delta = 0.1
 perturbation = noise
 output_dir = results
 ```
@@ -418,12 +457,14 @@ mpirun -np 4 ./vortex_sheet L u1 u2 time delta perturbation output_dir
 Examples:
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 noise results_noise
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 3.0 0.1 noise results_noise
 ```
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 sin results_sin
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 3.0 0.1 sin results_sin
 ```
+
+For smaller values of `delta`, the number of vortex points and time steps increases. Therefore, for very small `delta`, the total simulation time should be selected carefully.
 
 ---
 
@@ -446,9 +487,9 @@ First all `x` coordinates are written, followed by all `y` coordinates.
 Example:
 
 ```text
-results/wyniki_0.25_0.txt
-results/wyniki_0.25_10.txt
-results/wyniki_0.25_20.txt
+results/wyniki_0.1_0.txt
+results/wyniki_0.1_10.txt
+results/wyniki_0.1_20.txt
 ```
 
 ### `predkosc_*.txt` Files
@@ -624,30 +665,30 @@ However, in a periodic domain, the signed quantity may partially cancel out. For
 
 After running the analysis script, selected plots and animations are saved in the `figures/` directory.
 
-The exact filenames depend on the available values of `delta` and on the time reached by the simulation. For example, for `delta=0.25`, the script generates files similar to:
+For `delta=0.1`, the script generates files similar to:
 
 ```text
-figures/plots/sheet_snapshots_delta_0.25.png
-figures/plots/spectrum_snapshots_delta_0.25.png
-figures/plots/flow_delta_0.25.png
-figures/animations/vortex_delta_0.25.gif
+figures/plots/sheet_snapshots_delta_0.1.png
+figures/plots/spectrum_snapshots_delta_0.1.png
+figures/plots/flow_delta_0.1.png
+figures/animations/vortex_delta_0.1.gif
 ```
 
 ### Vortex Sheet Evolution
 
-![Vortex sheet evolution](figures/plots/sheet_snapshots_delta_0.25.png)
+![Vortex sheet evolution](figures/plots/sheet_snapshots_delta_0.1.png)
 
 ### Fourier Spectrum
 
-![Fourier spectrum](figures/plots/spectrum_snapshots_delta_0.25.png)
+![Fourier spectrum](figures/plots/spectrum_snapshots_delta_0.1.png)
 
 ### Flow Through the Initial Interface
 
-![Flow through y=0](figures/plots/flow_delta_0.25.png)
+![Flow through y=0](figures/plots/flow_delta_0.1.png)
 
 ### Vortex Sheet Animation
 
-![Vortex sheet animation](figures/animations/vortex_delta_0.25.gif)
+![Vortex sheet animation](figures/animations/vortex_delta_0.1.gif)
 
 ---
 
@@ -658,18 +699,20 @@ For multiple values of `delta`, the simulation can be run several times, each ti
 Example runs:
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.5 noise results_delta_0_5
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 3.0 0.5 noise results_delta_0_5
 ```
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.25 noise results_delta_0_25
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 3.0 0.25 noise results_delta_0_25
 ```
 
 ```bash
-mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 10.0 0.1 noise results_delta_0_1
+mpirun -np 4 ./vortex_sheet 1.0 2.0 1.0 3.0 0.1 noise results_delta_0_1
 ```
 
 The regularization parameter controls how much small-scale structure is allowed to develop. Larger values of `delta` smooth the solution, while smaller values allow sharper and more complex vortex structures.
+
+Because smaller `delta` increases the number of vortex points and decreases the time step, the total simulation time should be adjusted to the chosen value of `delta`.
 
 ---
 
@@ -737,7 +780,8 @@ Typical results are consistent with the expected behavior of the Kelvin-Helmholt
 - over time, smaller structures may wrap around larger vortex centers, which influences the shift of the spectral maximum,
 - the flow through `y=0` describes the intensity of mixing between the layers,
 - the initial perturbation affects the character of later structures,
-- using `double` precision improves numerical stability compared with lower-precision computations, especially for longer simulations and smaller regularization values.
+- using `double` precision improves numerical stability compared with lower-precision computations, especially for longer simulations and smaller regularization values,
+- smaller `delta` values require more computation time, so the simulated physical time should be selected according to the target resolution.
 
 ---
 
@@ -756,4 +800,3 @@ DOI: `10.1007/s10494-014-9581-1`
 [3] Kelvin-Helmholtz instability,  
 Wikipedia, accessed: 31.05.2024.  
 `https://en.wikipedia.org/wiki/Kelvin%E2%80%93Helmholtz_instability`
-```
