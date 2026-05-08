@@ -446,11 +446,20 @@ Example real-time run:
 ```bash
 python3 bec_simulation.py \
     --mode real \
-    --load results/beta500_omega3_lattice/psi_ground.npy \
-    --steps 5000 \
+    --nx 101 \
+    --ny 101 \
+    --domain 12 \
+    --beta 500 \
+    --omega 3.0 \
+    --potential lattice \
+    --V0 15 \
+    --kappa1 1.0471975512 \
+    --kappa2 1.0471975512 \
+    --load results/test_101/psi_ground.npy \
+    --steps 1000 \
     --dt 0.001 \
     --turn-off-lattice \
-    --output results/real_time_lattice_off
+    --output results/real_time_101
 ```
 
 ---
