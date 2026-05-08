@@ -1,0 +1,58 @@
+# Build files
+*.o
+*.obj
+*.out
+*.exe
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# CMake / build directories
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Compiled binary
+vortex_sheet
+
+# Raw simulation output
+results/
+
+# Temporary animation frames
+animation_frames/
+animations/_frames*/
+figures/animations/_frames*/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python packaging / test cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
